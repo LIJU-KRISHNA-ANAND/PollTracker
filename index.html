@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poll Participation Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        
+        h2 {
+            color: #444;
+        }
+        
+        .container {
+            display: flex;
+            gap: 50px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+        }
+        
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .results-section {
+            flex: 1;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .members-list {
+            border: 1px solid #ddd;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 0;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        
+        .members-list ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .members-list li {
+            padding: 8px 16px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .members-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .stat-box {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            flex: 1;
+            margin: 0 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-box h3 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .stat-box p {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Poll Participation Tracker</h1>
+    
+    <div class="container">
+        <div class="input-section">
+            <textarea id="votedInput" rows="20" placeholder="Paste voted members here (comma or newline separated)"></textarea>
+            <button id="processButton">Process Voted Members</button>
+        </div>
+        
+        <div class="results-section">
+            <div class="stats">
+                <div class="stat-box">
+                    <h3>Total Members</h3>
+                    <p id="totalCount">31</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Voted</h3>
+                    <p id="votedCount">0</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Not Voted</h3>
+                    <p id="nonVotedCount">31</p>
+                </div>
+            </div>
+            
+            <h2>Non-Voted Members</h2>
+            <div class="members-list">
+                <ul id="nonVotedList"></ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize members list
+        const allMembers = [
+            "sheena.ap@innovaturelabs.com",
+            "abhilash.m@innovaturelabs.com",
+            "adarsh.prakash@innovaturelabs.com",
+            "ajay.paul@innovaturelabs.com",
+            "akshay.babu@innovaturelabs.com",
+            "akshaya.kr@innovaturelabs.com",
+            "anandhu.girish@innovaturelabs.com",
+            "asif.khan@innovaturelabs.com",
+            "athira.ts@innovaturelabs.com",
+            "betsy.baby@innovaturelabs.com",
+            "deepa.sa@innovaturelabs.com",
+            "emilin.james@innovaturelabs.com",
+            "jephin.scaria@innovaturelabs.com",
+            "joby@innovaturelabs.com",
+            "lijumon.ap@innovaturelabs.com",
+            "lisha.varghese@innovaturelabs.com",
+            "liya.george@innovaturelabs.com",
+            "manu.ps@innovaturelabs.com",
+            "megha.mathew@innovaturelabs.com",
+            "mohamed.dilshad@innovaturelabs.com",
+            "mohammed.rami@innovaturelabs.com",
+            "muhammed.ajmal@innovaturelabs.com",
+            "prasanth.sebastian@innovaturelabs.com",
+            "ramees@innovaturelabs.com",
+            "sarath@innovaturelabs.com",
+            "snehil.s@innovaturelabs.com",
+            "sruthy.ms@innovaturelabs.com",
+            "stejin.jacob@innovaturelabs.com",
+            "sujith@innovaturelabs.com",
+            "tinkugeorge@innovaturelabs.com",
+            "vishnu.vs@innovaturelabs.com",
+        ];
+        
+        // DOM elements
+        const votedInput = document.getElementById('votedInput');
+        const processButton = document.getElementById('processButton');
+        const nonVotedList = document.getElementById('nonVotedList');
+        const totalCount = document.getElementById('totalCount');
+        const votedCount = document.getElementById('votedCount');
+        const nonVotedCount = document.getElementById('nonVotedCount');
+        
+        // Initialize the view
+        totalCount.textContent = allMembers.length;
+        updateNonVotedList([]);
+        
+        // Process voted members
+        processButton.addEventListener('click', () => {
+            const inputText = votedInput.value;
+            const inputList = inputText
+                .split(/[,\n]/)
+                .map(member => member.trim())
+                .filter(member => member !== "");
+                
+            const validVoted = inputList.filter(member => 
+                allMembers.some(m => m.toLowerCase() === member.toLowerCase())
+            );
+            
+            updateNonVotedList(validVoted);
+        });
+        
+        // Update the non-voted members list
+        function updateNonVotedList(votedMembers) {
+            // Find non-voted members
+            const nonVoted = allMembers.filter(member => 
+                !votedMembers.some(voted => voted.toLowerCase() === member.toLowerCase())
+            );
+            
+            // Update counts
+            votedCount.textContent = votedMembers.length;
+            nonVotedCount.textContent = nonVoted.length;
+            
+            // Clear previous list
+            nonVotedList.innerHTML = '';
+            
+            // Add non-voted members to the list
+            nonVoted.forEach(member => {
+                const li = document.createElement('li');
+                li.textContent = member;
+                nonVotedList.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
